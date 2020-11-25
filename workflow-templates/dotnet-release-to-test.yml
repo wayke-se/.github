@@ -51,11 +51,16 @@ jobs:
         files: 'deploy/*.yaml'
       env:
         image: ${{ env.registry }}/${{ github.repository }}:${{ github.sha }}-${{ job.container.id }}
+      
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v1
 
     - name: Connect to Azure Kubernetes Service
-      uses: azure/login@v1
+      uses: azure/aks-set-context@v1
       with:
-        creds: ${{ secrets.AKS }}
+        creds: ${{ secrets.AZURE_CREDENTIALS_TEST }}
+        cluster-name: wayke-test-aks
+        resource-group: testing-env
 
     - name: Deploy to Azure Kubernetes Service
       run: |

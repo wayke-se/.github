@@ -1,0 +1,13 @@
+{
+    "name": "Build and deploy .NET Core 3.1 projects to production",
+    "description": "A template for building and deploying .NET Core 3.1 projects to AKS.",
+    "iconName": "wayke-icon",
+    "categories": [
+        "C#"
+    ],
+    "filePatterns": [
+        "*.sln",
+        "^Dockerfile",
+        "/deploy/*.yaml"
+    ]
+}

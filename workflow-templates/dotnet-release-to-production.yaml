@@ -1,0 +1,62 @@
+on:
+  push:
+    branches:
+      - master
+
+name: DeployToProduction
+
+env:
+  registry: "wayke.azurecr.io"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+
+    - name: Use .NET Core 3.1
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x'
+
+    - name: Run test suite
+      run: |
+        dotnet test
+
+  build-and-deploy:
+    needs: test
+
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+
+    - name: Connect to Azure Container Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.registry }}
+        username: ${{ secrets.registry_username }}
+        password: ${{ secrets.registry_password }}
+
+    - name: Build Docker image
+      run: |
+        docker build . -t ${{ env.registry }}/${{ github.repository }}:${{ github.sha }}-${{ job.container.id }}
+
+    - name: Publish Docker image
+      run: |
+        docker push ${{ env.registry }}/${{ github.repository }}:${{ github.sha }}-${{ job.container.id }}
+
+    - name: Prepare deployment files
+      uses: microsoft/variable-substitution@v1 
+      with:
+        files: 'deploy/*.yaml'
+      env:
+        image: ${{ env.registry }}/${{ github.repository }}:${{ github.sha }}-${{ job.container.id }}
+
+    - name: Connect to Azure Kubernetes Service
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.aks }}
+
+    - name: Deploy to Azure Kubernetes Service
+      run: |
+        kubectl apply --kustomize deploy/overlays/production.yaml

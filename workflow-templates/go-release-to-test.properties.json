@@ -1,0 +1,13 @@
+{
+    "name": "Build and deploy Go projects to test",
+    "description": "A template for building and deploying Go projects to AKS.",
+    "iconName": "wayke-icon",
+    "categories": [
+        "Go"
+    ],
+    "filePatterns": [
+        "go.mod",
+        "^Dockerfile",
+        "/deploy/*.yaml"
+    ]
+}

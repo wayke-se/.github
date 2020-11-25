@@ -1,0 +1,34 @@
+on:
+  pull_request:
+    branches: [ master, test ]
+
+name: VerifyPullRequest
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+
+    - name: Use Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.15
+    
+    - name: Get dependencies
+      run: |
+        go mod download
+        go get -u honnef.co/go/tools/cmd/staticcheck
+        curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.31.0
+
+    - name: Run test suite
+      run: go test -race -cover -v ./...
+
+    - name: Run code vetting
+      run: go vet ./...
+      
+    - name: Run static analysis
+      run: staticcheck ./...
+      
+    - name: Run code lint
+      run: golangci-lint run ./...

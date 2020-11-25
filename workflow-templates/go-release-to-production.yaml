@@ -1,0 +1,76 @@
+on:
+  push:
+    branches:
+      - master
+
+name: DeployToProduction
+
+env:
+  registry: "wayke.azurecr.io"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+
+    - name: Use Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.15
+    
+    - name: Get dependencies
+      run: |
+        go mod download
+        go get -u honnef.co/go/tools/cmd/staticcheck
+        curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.31.0
+
+    - name: Run test suite
+      run: go test -race -cover -v ./...
+
+    - name: Run code vetting
+      run: go vet ./...
+      
+    - name: Run static analysis
+      run: staticcheck ./...
+      
+    - name: Run code lint
+      run: golangci-lint run ./...
+
+  build-and-deploy:
+    needs: test
+
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+
+    - name: Connect to Azure Container Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.registry }}
+        username: ${{ secrets.registry_username }}
+        password: ${{ secrets.registry_password }}
+
+    - name: Build Docker image
+      run: |
+        docker build . -t ${{ env.registry }}/${{ github.repository }}:${{ github.sha }}-${{ job.container.id }}
+      
+    - name: Publish Docker image
+      run: |
+        docker push ${{ env.registry }}/${{ github.repository }}:${{ github.sha }}-${{ job.container.id }}
+
+    - name: Prepare deployment files
+      uses: microsoft/variable-substitution@v1 
+      with:
+        files: 'deploy/*.yaml'
+      env:
+        image: ${{ env.registry }}/${{ github.repository }}:${{ github.sha }}-${{ job.container.id }}
+
+    - name: Connect to Azure Kubernetes Service
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.aks }}
+
+    - name: Deploy to Azure Kubernetes Service
+      run: |
+        kubectl apply --kustomize deploy/overlays/production.yaml

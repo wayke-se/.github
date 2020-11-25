@@ -1,0 +1,11 @@
+{
+    "name": "Test and verify a Pull Request for Go projects",
+    "description": "A template for verifying Go projects when branches merge.",
+    "iconName": "wayke-icon",
+    "categories": [
+        "Go"
+    ],
+    "filePatterns": [
+        "go.mod"
+    ]
+}

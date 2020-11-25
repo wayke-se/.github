@@ -1,0 +1,11 @@
+{
+    "name": "Test and verify a Pull Request for .NET Core 3.1 projects",
+    "description": "A template for verifying .NET Core 3.1 projects when branches merge.",
+    "iconName": "wayke-icon",
+    "categories": [
+        "C#"
+    ],
+    "filePatterns": [
+        "*.sln"
+    ]
+}

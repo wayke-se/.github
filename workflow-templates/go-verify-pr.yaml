@@ -2,7 +2,7 @@ on:
   pull_request:
     branches: [ master, test ]
 
-name: VerifyPullRequest
+name: Pull Request - Test and Verify
 
 jobs:
   test:

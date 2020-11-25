@@ -8,6 +8,8 @@
     "filePatterns": [
         "go.mod",
         "^Dockerfile",
-        "/deploy/*.yaml"
+        "deploy/overlays/production/kustomization.yaml",
+        "deploy/base/kustomization.yaml",
+        "deploy/base/deployment.yaml"
     ]
 }

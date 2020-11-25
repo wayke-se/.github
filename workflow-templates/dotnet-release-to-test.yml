@@ -34,8 +34,8 @@ jobs:
       uses: azure/docker-login@v1
       with:
         login-server: ${{ env.registry }}
-        username: ${{ secrets.registry_username }}
-        password: ${{ secrets.registry_password }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
 
     - name: Build Docker image
       run: |
@@ -55,7 +55,7 @@ jobs:
     - name: Connect to Azure Kubernetes Service
       uses: azure/login@v1
       with:
-        creds: ${{ secrets.aks }}
+        creds: ${{ secrets.AKS }}
 
     - name: Deploy to Azure Kubernetes Service
       run: |

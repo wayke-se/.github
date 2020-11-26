@@ -53,20 +53,19 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build . -t ${{ env.registry }}/${{ github.repository }}:${{ github.sha }}-${{ job.container.id }}
+        docker build . -t ${{ env.registry }}/${{ github.repository }}:${{ github.sha }}
       
     - name: Publish Docker image
       run: |
-        docker push ${{ env.registry }}/${{ github.repository }}:${{ github.sha }}-${{ job.container.id }}
-
-    - name: Prepare deployment files
-      run: |
-        export IMAGE_PATH="${{ env.registry }}/${{ github.repository }}/${{ github.repository }}:${{ github.sha }}-${{ job.container.id }}"
-        export K8S_DEPLOYMENT=$(kubectl set image -f deploy/base/deployment.yaml "${{ github.repository }}"="${IMAGE_PATH}" --local -o yaml)
-        echo $K8S_DEPLOYMENT > deploy/base/deployment.yaml
+        docker push ${{ env.registry }}/${{ github.repository }}:${{ github.sha }}
       
     - name: Install kubectl
       uses: azure/setup-kubectl@v1
+
+    - name: Prepare deployment files
+      run: |
+        export K8S_DEPLOYMENT="$(kubectl set image -f deploy/base/deployment.yaml admin-ui="${{ env.registry }}/${{ github.repository }}:${{ github.sha }}" --local -o yaml)"
+        printf '%s' "${K8S_DEPLOYMENT}" > deploy/base/deployment.yaml
 
     - name: Connect to Azure Kubernetes Service
       uses: azure/aks-set-context@v1
@@ -77,4 +76,4 @@ jobs:
 
     - name: Deploy to Azure Kubernetes Service
       run: |
-        kubectl apply --kustomize deploy/overlays/test/kustomization.yaml
+        kubectl apply --kustomize deploy/overlays/test

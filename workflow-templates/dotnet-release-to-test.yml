@@ -18,7 +18,12 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: '3.1.x'
-    
+
+    - name: Restore packages
+      run: |
+        dotnet nuget update source "wayke-gh" --store-password-in-clear-text --configfile NuGet.Config -u "ourbjorn" -p "${{ secrets.NUGET_TOKEN }}"
+        dotnet restore
+
     - name: Run test suite
       run: |
         dotnet test
@@ -37,22 +42,35 @@ jobs:
         username: ${{ secrets.REGISTRY_USERNAME }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
 
+    - name: Use .NET Core 3.1
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x'
+
+    - name: Restore .NET packages
+      run: |
+        dotnet nuget update source "wayke-gh" --store-password-in-clear-text --configfile NuGet.Config -u "ourbjorn" -p "${{ secrets.NUGET_TOKEN }}"
+        dotnet restore
+
+    - name: Build Release version
+      run: |
+        dotnet publish [[PROJECT FILE]] -c Debug -o out/ -r linux-musl-x64
+
     - name: Build Docker image
       run: |
-        docker build . -t ${{ env.registry }}/${{ github.repository }}:${{ github.sha }}-${{ job.container.id }}
-      
+        docker build -t ${{ env.registry }}/${{ github.repository }}:${{ github.sha }} -f Dockerfile .
+
     - name: Publish Docker image
       run: |
-        docker push ${{ env.registry }}/${{ github.repository }}:${{ github.sha }}-${{ job.container.id }}
+        docker push ${{ env.registry }}/${{ github.repository }}:${{ github.sha }}
       
     - name: Install kubectl
       uses: azure/setup-kubectl@v1
 
     - name: Prepare deployment files
       run: |
-        export IMAGE_PATH="${{ env.registry }}/${{ github.repository }}/${{ github.repository }}:${{ github.sha }}-${{ job.container.id }}"
-        export K8S_DEPLOYMENT=$(kubectl set image -f deploy/base/deployment.yaml "${{ github.repository }}"="${IMAGE_PATH}" --local -o yaml)
-        echo $K8S_DEPLOYMENT > deploy/base/deployment.yaml
+        export K8S_DEPLOYMENT="$(kubectl set image -f deploy/base/deployment.yaml admin-ui="${{ env.registry }}/${{ github.repository }}:${{ github.sha }}" --local -o yaml)"
+        printf '%s' "${K8S_DEPLOYMENT}" > deploy/base/deployment.yaml
 
     - name: Connect to Azure Kubernetes Service
       uses: azure/aks-set-context@v1
@@ -63,4 +81,4 @@ jobs:
 
     - name: Deploy to Azure Kubernetes Service
       run: |
-        kubectl apply --kustomize deploy/overlays/test/kustomization.yaml
+        kubectl apply --kustomize deploy/overlays/test

@@ -1,3 +1,3 @@
 # Wayke GitHub
 
-This repository contains organization-wide community health files and GitHub configuration for Wayke.
+This repository contains organization-wide GitHub configuration for Wayke.

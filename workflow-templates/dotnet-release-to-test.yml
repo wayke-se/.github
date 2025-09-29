@@ -21,7 +21,7 @@ jobs:
 
     - name: Restore packages
       run: |
-        dotnet nuget update source "wayke-gh" --store-password-in-clear-text --configfile NuGet.Config -u "ourbjorn" -p "${{ secrets.NUGET_TOKEN }}"
+        dotnet nuget update source "wayke-gh" --store-password-in-clear-text --configfile NuGet.Config -u "marbergq" -p "${{ secrets.NUGET_TOKEN }}"
         dotnet restore
 
     - name: Run test suite
@@ -49,7 +49,7 @@ jobs:
 
     - name: Restore .NET packages
       run: |
-        dotnet nuget update source "wayke-gh" --store-password-in-clear-text --configfile NuGet.Config -u "ourbjorn" -p "${{ secrets.NUGET_TOKEN }}"
+        dotnet nuget update source "wayke-gh" --store-password-in-clear-text --configfile NuGet.Config -u "marbergq" -p "${{ secrets.NUGET_TOKEN }}"
         dotnet restore
 
     - name: Build Release version
